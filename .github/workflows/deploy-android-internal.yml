@@ -1,0 +1,110 @@
+name: Deploy Android Internal
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Git ref to deploy. Defaults to the triggering ref.
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-android-internal-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Build and upload Android internal AAB
+    runs-on: ubuntu-latest
+    environment: internal-android
+    env:
+      JAVA_VERSION: "17"
+      FLUTTER_VERSION: "3.41.0"
+      KEYSTORE_PATH: ${{ github.workspace }}/android/upload-keystore.jks
+      PLAY_JSON_PATH: ${{ github.workspace }}/android/play-service-account.json
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+
+      - name: Validate Android deployment secrets
+        shell: bash
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          set -euo pipefail
+          missing=0
+          for name in \
+            ANDROID_KEYSTORE_BASE64 \
+            ANDROID_KEYSTORE_PASSWORD \
+            ANDROID_KEY_ALIAS \
+            ANDROID_KEY_PASSWORD \
+            PLAY_SERVICE_ACCOUNT_JSON; do
+            if [ -z "${!name:-}" ]; then
+              echo "::error::Missing required secret: ${name}"
+              missing=1
+            fi
+          done
+          if [ "${missing}" -ne 0 ]; then
+            exit 1
+          fi
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+
+      - name: Install fastlane
+        run: gem install fastlane --no-document
+
+      - name: Install Flutter dependencies
+        run: flutter pub get
+
+      - name: Materialize Android signing files
+        shell: bash
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          set -euo pipefail
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$KEYSTORE_PATH"
+          printf '%s' "$PLAY_SERVICE_ACCOUNT_JSON" > "$PLAY_JSON_PATH"
+          cat > android/key.properties <<EOF
+          storeFile=$KEYSTORE_PATH
+          storePassword=$ANDROID_KEYSTORE_PASSWORD
+          keyAlias=$ANDROID_KEY_ALIAS
+          keyPassword=$ANDROID_KEY_PASSWORD
+          EOF
+
+      - name: Build release AAB
+        run: flutter build appbundle --release
+
+      - name: Upload to Google Play Internal testing
+        working-directory: android
+        env:
+          PLAY_SERVICE_ACCOUNT_JSON_PATH: ${{ env.PLAY_JSON_PATH }}
+        run: fastlane internal
