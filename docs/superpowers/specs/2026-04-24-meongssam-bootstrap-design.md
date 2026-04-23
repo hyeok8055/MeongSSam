@@ -113,6 +113,11 @@ lib/
     utils/
   shared/
     models/
+    ui/
+      app_button.dart
+      app_card.dart
+      app_scaffold.dart
+      app_section.dart
     widgets/
   features/
     home/
@@ -152,7 +157,9 @@ test/
 
 - `app/`: 앱 시작, DI, 환경설정, 라우팅
 - `core/`: 공용 인프라와 플랫폼 추상화
+- `core/design`: 디자인 토큰과 테마 소유
 - `shared/`: 정말 여러 feature가 같이 쓰는 모델/위젯만 둠
+- `shared/ui`: 외부 UI kit를 감싸는 앱 공용 UI 어댑터 층
 - `features/`: 사용자 기능 단위
 - feature 내부는 `presentation -> application -> domain -> data` 순서로 책임 분리
 
@@ -483,6 +490,17 @@ Fastlane은 배포 전용으로 사용한다.
 - 카드 버튼과 보조 액션 카드는 재사용 위젯으로 분리
 - spacing, radius, shadow는 design token으로 위임
 - 접근성을 기본 전제로 삼는다
+
+### 컴포넌트 재사용 전략
+
+- 전역 primitive는 `shared/ui`에 둔다
+- 화면 전용 composite는 각 feature의 `presentation/widgets`에 둔다
+- 한 화면에서만 쓰는 위젯은 공용으로 올리지 않는다
+- 두 개 이상 feature에서 반복되면 `shared/ui` 또는 `shared/widgets`로 승격한다
+- 외부 UI 라이브러리(`shadcn_flutter`, `shadcn_ui` 등)는 가능하면 `shared/ui`에서 감싼 뒤 feature에 노출한다
+- `application/domain/data` 레이어에는 외부 UI 패키지 타입이 새지 않게 한다
+
+이 전략을 따르면 나중에 UI kit를 바꾸더라도 `shared/ui`와 일부 `presentation`만 주로 수정하면 된다.
 
 초기 접근성 기준:
 
