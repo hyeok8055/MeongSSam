@@ -1,0 +1,113 @@
+name: Deploy iOS TestFlight
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Git ref to deploy. Defaults to the triggering ref.
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-ios-testflight-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Build and upload TestFlight IPA
+    runs-on: macos-26
+    environment: internal-ios
+    env:
+      FLUTTER_VERSION: "3.41.0"
+      APP_STORE_CONNECT_API_KEY_PATH: ${{ github.workspace }}/ios/fastlane/app-store-connect-api-key.p8
+      MATCH_SSH_KEY_PATH: ${{ github.workspace }}/ios/fastlane/match-deploy-key
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+
+      - name: Validate iOS deployment secrets
+        shell: bash
+        env:
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
+          MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          MATCH_SSH_PRIVATE_KEY: ${{ secrets.MATCH_SSH_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          missing=0
+          for name in \
+            APP_STORE_CONNECT_ISSUER_ID \
+            APP_STORE_CONNECT_KEY_ID \
+            APP_STORE_CONNECT_PRIVATE_KEY \
+            MATCH_GIT_URL \
+            MATCH_PASSWORD \
+            MATCH_SSH_PRIVATE_KEY; do
+            if [ -z "${!name:-}" ]; then
+              echo "::error::Missing required secret: ${name}"
+              missing=1
+            fi
+          done
+          if [ "${missing}" -ne 0 ]; then
+            exit 1
+          fi
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+
+      - name: Install fastlane
+        run: gem install fastlane --no-document
+
+      - name: Install Flutter dependencies
+        run: flutter pub get
+
+      - name: Install CocoaPods dependencies
+        working-directory: ios
+        run: pod install
+
+      - name: Materialize App Store Connect key and match SSH key
+        shell: bash
+        env:
+          APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
+          MATCH_SSH_PRIVATE_KEY: ${{ secrets.MATCH_SSH_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          printf '%s' "$APP_STORE_CONNECT_PRIVATE_KEY" > "$APP_STORE_CONNECT_API_KEY_PATH"
+          printf '%s' "$MATCH_SSH_PRIVATE_KEY" > "$MATCH_SSH_KEY_PATH"
+          chmod 600 "$APP_STORE_CONNECT_API_KEY_PATH" "$MATCH_SSH_KEY_PATH"
+
+      - name: Start SSH agent for match
+        shell: bash
+        run: |
+          set -euo pipefail
+          eval "$(ssh-agent -s)"
+          ssh-add "$MATCH_SSH_KEY_PATH"
+          {
+            echo "SSH_AUTH_SOCK=$SSH_AUTH_SOCK"
+            echo "SSH_AGENT_PID=$SSH_AGENT_PID"
+          } >> "$GITHUB_ENV"
+
+      - name: Build and upload with fastlane
+        working-directory: ios
+        env:
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          APP_STORE_CONNECT_PRIVATE_KEY_PATH: ${{ env.APP_STORE_CONNECT_API_KEY_PATH }}
+          MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+        run: fastlane beta

@@ -1,0 +1,29 @@
+default_platform(:android)
+
+platform :android do
+  desc 'Upload the existing release AAB to Google Play Internal testing'
+  lane :internal do
+    required_env = %w[
+      PLAY_SERVICE_ACCOUNT_JSON_PATH
+    ]
+
+    required_env.each do |key|
+      UI.user_error!("Missing required environment variable: #{key}") if ENV[key].to_s.empty?
+    end
+
+    aab_path = File.expand_path('../../build/app/outputs/bundle/release/app-release.aab', __dir__)
+    UI.user_error!("Expected AAB not found at #{aab_path}") unless File.exist?(aab_path)
+
+    upload_to_play_store(
+      aab: aab_path,
+      track: 'internal',
+      json_key: ENV['PLAY_SERVICE_ACCOUNT_JSON_PATH'],
+      skip_upload_apk: true,
+      skip_upload_aab: false,
+      skip_upload_images: true,
+      skip_upload_metadata: true,
+      skip_upload_screenshots: true,
+      validate_only: false
+    )
+  end
+end

@@ -1,0 +1,43 @@
+default_platform(:ios)
+
+platform :ios do
+  desc 'Build a signed Runner archive and upload it to TestFlight'
+  lane :beta do
+    required_env = %w[
+      APP_STORE_CONNECT_ISSUER_ID
+      APP_STORE_CONNECT_KEY_ID
+      APP_STORE_CONNECT_PRIVATE_KEY_PATH
+      MATCH_GIT_URL
+      MATCH_PASSWORD
+    ]
+
+    required_env.each do |key|
+      UI.user_error!("Missing required environment variable: #{key}") if ENV[key].to_s.empty?
+    end
+
+    api_key = app_store_connect_api_key(
+      key_id: ENV['APP_STORE_CONNECT_KEY_ID'],
+      issuer_id: ENV['APP_STORE_CONNECT_ISSUER_ID'],
+      key_filepath: ENV['APP_STORE_CONNECT_PRIVATE_KEY_PATH']
+    )
+
+    match(
+      api_key: api_key,
+      type: 'appstore',
+      readonly: true,
+      git_url: ENV['MATCH_GIT_URL']
+    )
+
+    build_app(
+      workspace: 'Runner.xcworkspace',
+      scheme: 'Runner',
+      export_method: 'app-store',
+      clean: true
+    )
+
+    upload_to_testflight(
+      api_key: api_key,
+      skip_waiting_for_build_processing: true
+    )
+  end
+end
