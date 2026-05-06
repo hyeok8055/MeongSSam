@@ -9,12 +9,40 @@ void main() {
   testWidgets('home screen shows main level actions and quick actions', (
     tester,
   ) async {
-    await tester.pumpWidget(
-      const ProviderScope(child: MaterialApp(home: HomeScreen())),
-    );
-    await tester.pumpAndSettle();
+    await pumpHomeScreen(tester);
 
     expect(find.byType(LevelCard), findsNWidgets(3));
     expect(find.byType(QuickActionCard), findsNWidgets(2));
   });
+
+  testWidgets('unimplemented main actions show the warning popup', (
+    tester,
+  ) async {
+    await pumpHomeScreen(tester);
+
+    for (final title in ['2급 문제 풀이', '3급 문제 풀이', '즐겨찾기', '오답노트']) {
+      await tester.tap(find.text(title));
+      await tester.pump();
+
+      expect(find.text('COMING SOON!'), findsOneWidget);
+      expect(find.text('확인'), findsOneWidget);
+
+      await tester.tap(find.text('확인'));
+      await tester.pump();
+
+      expect(find.text('COMING SOON!'), findsNothing);
+    }
+  });
+}
+
+Future<void> pumpHomeScreen(WidgetTester tester) async {
+  tester.view.physicalSize = const Size(480, 1040);
+  tester.view.devicePixelRatio = 1;
+  addTearDown(tester.view.resetPhysicalSize);
+  addTearDown(tester.view.resetDevicePixelRatio);
+
+  await tester.pumpWidget(
+    const ProviderScope(child: MaterialApp(home: HomeScreen())),
+  );
+  await tester.pumpAndSettle();
 }
