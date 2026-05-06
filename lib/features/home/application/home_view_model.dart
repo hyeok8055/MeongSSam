@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:meongssam/core/assets/app_assets.dart';
 
 final homeViewModelProvider = Provider<HomeViewModel>((ref) {
   return const HomeViewModel();
@@ -8,30 +9,37 @@ class HomeViewModel {
   const HomeViewModel();
 
   List<HomeLevelItem> get levels => const [
+    HomeLevelItem(title: '1급 문제 풀이', iconAsset: AppAssets.deongIcon),
+    HomeLevelItem(title: '2급 문제 풀이', iconAsset: AppAssets.somcon),
     HomeLevelItem(
-      title: '1급 문제 풀이',
-      description: '핵심 유형을 빠르게 훑고 실전 감각을 유지합니다.',
+      title: '3급 문제 풀이',
+      iconAsset: AppAssets.mengcon,
+      // TODO: Rework the source asset so the 3급 icon ratio matches Figma exactly.
+      iconScale: 1.12,
     ),
-    HomeLevelItem(title: '2급 문제 풀이', description: '출제 빈도가 높은 문제를 차분하게 정리합니다.'),
-    HomeLevelItem(title: '3급 문제 풀이', description: '기본 개념과 대표 문제를 가볍게 복습합니다.'),
   ];
 
   List<HomeQuickActionItem> get quickActions => const [
-    HomeQuickActionItem(title: '오답노트', description: '헷갈린 문제를 다시 모아봅니다.'),
-    HomeQuickActionItem(title: '즐겨찾기', description: '자주 보는 문제를 바로 꺼내봅니다.'),
+    HomeQuickActionItem(title: '즐겨찾기', iconAsset: AppAssets.star),
+    HomeQuickActionItem(title: '오답노트', iconAsset: AppAssets.error),
   ];
 }
 
 class HomeLevelItem {
-  const HomeLevelItem({required this.title, required this.description});
+  const HomeLevelItem({
+    required this.title,
+    required this.iconAsset,
+    this.iconScale = 1,
+  });
 
   final String title;
-  final String description;
+  final String iconAsset;
+  final double iconScale;
 }
 
 class HomeQuickActionItem {
-  const HomeQuickActionItem({required this.title, required this.description});
+  const HomeQuickActionItem({required this.title, required this.iconAsset});
 
   final String title;
-  final String description;
+  final String iconAsset;
 }

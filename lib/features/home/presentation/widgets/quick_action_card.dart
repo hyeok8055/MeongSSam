@@ -1,44 +1,67 @@
 import 'package:flutter/material.dart';
-import 'package:meongssam/core/design/app_colors.dart';
-import 'package:meongssam/core/design/app_spacing.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:meongssam/features/home/application/home_view_model.dart';
-import 'package:meongssam/shared/ui/app_button.dart';
 
 class QuickActionCard extends StatelessWidget {
-  const QuickActionCard({super.key, required this.item, this.onTap});
+  const QuickActionCard({
+    super.key,
+    required this.item,
+    this.scale = 1,
+    this.onTap,
+  });
 
   final HomeQuickActionItem item;
+  final double scale;
   final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    final isNote = item.title == '오답노트';
-    final backgroundColor = isNote ? AppColors.note : AppColors.favorite;
-    final icon = isNote ? Icons.auto_stories_rounded : Icons.favorite_rounded;
-    final theme = Theme.of(context);
+    final radius = 12 * scale;
+    final height = 130 * scale;
+    final iconSize = 56 * scale;
 
-    return AppButton(
-      onTap: onTap,
-      backgroundColor: backgroundColor,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(minHeight: 156),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.8),
-                borderRadius: BorderRadius.circular(16),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(radius),
+        child: Ink(
+          height: height,
+          decoration: BoxDecoration(
+            color: const Color(0xFFF3F4F5),
+            border: Border.all(color: const Color(0x1A002366)),
+            borderRadius: BorderRadius.circular(radius),
+          ),
+          child: Stack(
+            alignment: Alignment.topCenter,
+            children: [
+              Positioned(
+                top: 17 * scale,
+                child: SvgPicture.asset(
+                  item.iconAsset,
+                  width: iconSize,
+                  height: iconSize,
+                  fit: BoxFit.contain,
+                ),
               ),
-              child: Icon(icon, color: AppColors.textPrimary),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            Text(item.title, style: theme.textTheme.titleLarge),
-            const SizedBox(height: AppSpacing.xs),
-            Text(item.description, style: theme.textTheme.bodySmall),
-          ],
+              Positioned(
+                top: 83 * scale,
+                left: 0,
+                right: 0,
+                child: Text(
+                  item.title,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontFamily: 'Pretendard',
+                    fontSize: 24 * scale,
+                    fontWeight: FontWeight.w500,
+                    height: 1,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

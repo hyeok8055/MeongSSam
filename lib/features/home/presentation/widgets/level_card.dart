@@ -1,56 +1,59 @@
 import 'package:flutter/material.dart';
-import 'package:meongssam/core/design/app_colors.dart';
-import 'package:meongssam/core/design/app_spacing.dart';
 import 'package:meongssam/features/home/application/home_view_model.dart';
-import 'package:meongssam/shared/ui/app_button.dart';
 
 class LevelCard extends StatelessWidget {
-  const LevelCard({super.key, required this.item, this.onTap});
+  const LevelCard({super.key, required this.item, this.scale = 1, this.onTap});
 
   final HomeLevelItem item;
+  final double scale;
   final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final height = 66 * scale;
+    final iconSize = 58 * scale * item.iconScale;
+    final radius = 12 * scale;
 
-    return AppButton(
-      onTap: onTap,
-      backgroundColor: AppColors.surface,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 56,
-            height: 56,
-            decoration: BoxDecoration(
-              color: AppColors.brandSoft,
-              borderRadius: BorderRadius.circular(18),
-            ),
-            child: const Icon(
-              Icons.school_rounded,
-              color: AppColors.brand,
-              size: 28,
-            ),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(radius),
+        child: Ink(
+          height: height,
+          decoration: BoxDecoration(
+            color: const Color(0xFFF3F4F5),
+            border: Border.all(color: const Color(0x1A002366)),
+            borderRadius: BorderRadius.circular(radius),
           ),
-          const SizedBox(width: AppSpacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(item.title, style: theme.textTheme.titleLarge),
-                const SizedBox(height: AppSpacing.xs),
-                Text(item.description, style: theme.textTheme.bodySmall),
-              ],
-            ),
+          child: Stack(
+            children: [
+              Positioned(
+                left: 17 * scale,
+                top: (height - iconSize) / 2,
+                child: Image.asset(
+                  item.iconAsset,
+                  width: iconSize,
+                  height: iconSize,
+                  fit: BoxFit.contain,
+                ),
+              ),
+              Center(
+                child: Text(
+                  item.title,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: const Color(0xFF191C1D),
+                    fontFamily: 'Pretendard',
+                    fontSize: 24 * scale,
+                    fontWeight: FontWeight.w500,
+                    height: 1,
+                  ),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: AppSpacing.sm),
-          const Icon(
-            Icons.arrow_forward_ios_rounded,
-            size: 18,
-            color: AppColors.textSecondary,
-          ),
-        ],
+        ),
       ),
     );
   }
