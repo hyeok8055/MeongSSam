@@ -6,6 +6,7 @@ import 'package:meongssam/features/home/application/home_view_model.dart';
 import 'package:meongssam/features/home/presentation/widgets/level_card.dart';
 import 'package:meongssam/features/home/presentation/widgets/main_warning_dialog.dart';
 import 'package:meongssam/features/home/presentation/widgets/quick_action_card.dart';
+import 'package:meongssam/features/quiz/presentation/view/quiz_image_screen.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -27,6 +28,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   void _hideWarning() {
     setState(() => _isWarningVisible = false);
+  }
+
+  void _openQuiz() {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(builder: (context) => const QuizImageScreen()),
+    );
   }
 
   @override
@@ -90,7 +97,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                       LevelCard(
                                         item: viewModel.levels[index],
                                         scale: scale,
-                                        onTap: index == 0 ? null : _showWarning,
+                                        onTap: index == 0
+                                            ? _openQuiz
+                                            : _showWarning,
                                       ),
                                       if (index != viewModel.levels.length - 1)
                                         SizedBox(height: 25 * scale),

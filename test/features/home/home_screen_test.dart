@@ -15,6 +15,17 @@ void main() {
     expect(find.byType(QuickActionCard), findsNWidgets(2));
   });
 
+  testWidgets('first level action opens the image quiz screen', (tester) async {
+    await pumpHomeScreen(tester);
+
+    await tester.tap(find.text('1급 문제 풀이'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('1/20'), findsOneWidget);
+    expect(find.text('1번의 명칭은 무엇입니까?'), findsOneWidget);
+    expect(find.text('COMING SOON!'), findsNothing);
+  });
+
   testWidgets('unimplemented main actions show the warning popup', (
     tester,
   ) async {
