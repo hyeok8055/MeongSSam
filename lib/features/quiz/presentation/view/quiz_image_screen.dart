@@ -5,6 +5,7 @@ import 'package:meongssam/core/assets/app_assets.dart';
 import 'package:meongssam/features/quiz/application/quiz_view_model.dart';
 import 'package:meongssam/features/quiz/presentation/widgets/quiz_choice_list.dart';
 import 'package:meongssam/features/quiz/presentation/widgets/quiz_header.dart';
+import 'package:meongssam/features/quiz/presentation/widgets/quiz_image_choice_grid.dart';
 import 'package:meongssam/features/quiz/presentation/widgets/quiz_image_placeholder.dart';
 import 'package:meongssam/features/quiz/presentation/widgets/quiz_question_prompt.dart';
 import 'package:meongssam/features/quiz/presentation/widgets/quiz_responsive_frame.dart';
@@ -120,6 +121,11 @@ class _QuizImageScreenState extends ConsumerState<QuizImageScreen> {
                     final stimulusHeight = (metrics.minHeight * 0.31)
                         .clamp(220 * scale, 294 * scale)
                         .toDouble();
+                    final usesImageChoiceGrid =
+                        question.number >= 326 &&
+                        question.number <= 331 &&
+                        question.imageAssetPaths.isNotEmpty &&
+                        question.choices.isEmpty;
 
                     return Column(
                       children: [
@@ -143,20 +149,33 @@ class _QuizImageScreenState extends ConsumerState<QuizImageScreen> {
                           ),
                         ),
                         SizedBox(height: 24 * scale),
-                        SizedBox(
-                          width: metrics.viewportWidth,
-                          height: stimulusHeight,
-                          child: ClipRect(
-                            child: QuizImagePlaceholder(
-                              height: stimulusHeight,
-                              imageAssetPath: imageAssetPath,
-                              bodyText: question.bodyText,
-                              showNavigation: question.hasImageNavigation,
-                              onPrevious: () => _showPreviousImage(imageCount),
-                              onNext: () => _showNextImage(imageCount),
+                        if (usesImageChoiceGrid) ...[
+                          SizedBox(
+                            width: metrics.contentWidth,
+                            child: _QuestionBodyPanel(
+                              text: question.bodyText,
+                              scale: scale,
                             ),
                           ),
-                        ),
+                        ] else ...[
+                          SizedBox(
+                            width: metrics.viewportWidth,
+                            height: stimulusHeight,
+                            child: ClipRect(
+                              child: QuizImagePlaceholder(
+                                height: stimulusHeight,
+                                imageAssetPath: imageAssetPath,
+                                bodyText: question.bodyText,
+                                showNavigation: question.hasImageNavigation,
+                                currentImageIndex: _imageIndex,
+                                imageCount: imageCount,
+                                onPrevious: () =>
+                                    _showPreviousImage(imageCount),
+                                onNext: () => _showNextImage(imageCount),
+                              ),
+                            ),
+                          ),
+                        ],
                         SizedBox(height: 16 * scale),
                         Expanded(
                           child: ClipRect(
@@ -166,14 +185,26 @@ class _QuizImageScreenState extends ConsumerState<QuizImageScreen> {
                                 alignment: Alignment.topCenter,
                                 child: SizedBox(
                                   width: metrics.contentWidth,
-                                  child: QuizChoiceList(
-                                    choices: question.choices,
-                                    selectedIndex: state.selectedChoiceIndex,
-                                    correctChoiceIndex:
-                                        question.correctChoiceIndex,
-                                    scale: scale,
-                                    onSelect: _selectChoice,
-                                  ),
+                                  child: usesImageChoiceGrid
+                                      ? QuizImageChoiceGrid(
+                                          imageAssetPaths:
+                                              question.imageAssetPaths,
+                                          selectedIndex:
+                                              state.selectedChoiceIndex,
+                                          correctChoiceIndex:
+                                              question.correctChoiceIndex,
+                                          scale: scale,
+                                          onSelect: _selectChoice,
+                                        )
+                                      : QuizChoiceList(
+                                          choices: question.choices,
+                                          selectedIndex:
+                                              state.selectedChoiceIndex,
+                                          correctChoiceIndex:
+                                              question.correctChoiceIndex,
+                                          scale: scale,
+                                          onSelect: _selectChoice,
+                                        ),
                                 ),
                               ),
                             ),
@@ -192,6 +223,38 @@ class _QuizImageScreenState extends ConsumerState<QuizImageScreen> {
                 ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _QuestionBodyPanel extends StatelessWidget {
+  const _QuestionBodyPanel({required this.text, required this.scale});
+
+  final String text;
+  final double scale;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.symmetric(
+        horizontal: 16 * scale,
+        vertical: 14 * scale,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border.all(color: Colors.black, width: 1.5 * scale),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          color: const Color(0xFF191C1D),
+          fontFamily: 'Pretendard',
+          fontSize: 15 * scale,
+          fontWeight: FontWeight.w500,
+          height: 1.4,
         ),
       ),
     );

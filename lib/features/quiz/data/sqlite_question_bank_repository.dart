@@ -53,9 +53,7 @@ class SqliteQuestionBankRepository implements QuestionBankRepository {
           final id = row['id']! as String;
           final choices = choicesByQuestion[id] ?? const <QuizChoice>[];
           final answerLabel = row['answer_label'] as String?;
-          final correctChoiceIndex = choices.indexWhere(
-            (choice) => choice.label == answerLabel,
-          );
+          final correctChoiceIndex = _correctChoiceIndex(choices, answerLabel);
 
           return QuizQuestion(
             id: id,
@@ -68,6 +66,19 @@ class SqliteQuestionBankRepository implements QuestionBankRepository {
           );
         })
         .toList(growable: false);
+  }
+
+  int _correctChoiceIndex(List<QuizChoice> choices, String? answerLabel) {
+    final choiceIndex = choices.indexWhere(
+      (choice) => choice.label == answerLabel,
+    );
+    if (choiceIndex >= 0) return choiceIndex;
+
+    final numericLabel = int.tryParse(answerLabel ?? '');
+    if (numericLabel != null && numericLabel > 0) {
+      return numericLabel - 1;
+    }
+    return 0;
   }
 
   Map<String, List<QuizChoice>> _choicesByQuestion(

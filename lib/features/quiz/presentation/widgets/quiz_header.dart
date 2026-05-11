@@ -39,35 +39,58 @@ class QuizHeader extends StatelessWidget {
             totalCount: totalCount,
             scale: scale,
           ),
-          Positioned(
-            left: sideInset,
-            top: 0,
-            child: IconButton(
-              tooltip: '홈으로',
-              onPressed: onBack,
-              padding: EdgeInsets.zero,
-              constraints: BoxConstraints.tightFor(
-                width: 32 * scale,
-                height: 32 * scale,
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Padding(
+              padding: EdgeInsets.only(left: sideInset),
+              child: _HeaderIconButton(scale: scale, onTap: onBack),
+            ),
+          ),
+          Align(
+            alignment: Alignment.centerRight,
+            child: Padding(
+              padding: EdgeInsets.only(right: sideInset),
+              child: QuizNextButton(
+                scale: scale,
+                enabled: nextEnabled,
+                onTap: onNext,
               ),
-              icon: Icon(
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HeaderIconButton extends StatelessWidget {
+  const _HeaderIconButton({required this.scale, required this.onTap});
+
+  final double scale;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: '홈으로',
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(7 * scale),
+          child: SizedBox(
+            width: 63 * scale,
+            height: 32 * scale,
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Icon(
                 Icons.chevron_left,
                 color: Colors.black,
                 size: 28 * scale,
               ),
-              splashRadius: 20 * scale,
             ),
           ),
-          Positioned(
-            right: sideInset,
-            top: 0,
-            child: QuizNextButton(
-              scale: scale,
-              enabled: nextEnabled,
-              onTap: onNext,
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

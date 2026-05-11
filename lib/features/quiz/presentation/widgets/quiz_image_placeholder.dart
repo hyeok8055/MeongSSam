@@ -7,6 +7,8 @@ class QuizImagePlaceholder extends StatelessWidget {
     this.imageAssetPath,
     this.bodyText = '',
     this.showNavigation = false,
+    this.currentImageIndex = 0,
+    this.imageCount = 0,
     this.onPrevious,
     this.onNext,
   });
@@ -15,6 +17,8 @@ class QuizImagePlaceholder extends StatelessWidget {
   final String? imageAssetPath;
   final String bodyText;
   final bool showNavigation;
+  final int currentImageIndex;
+  final int imageCount;
   final VoidCallback? onPrevious;
   final VoidCallback? onNext;
 
@@ -26,37 +30,56 @@ class QuizImagePlaceholder extends StatelessWidget {
     return SizedBox(
       width: double.infinity,
       height: height,
-      child: ColoredBox(
-        color: Colors.white,
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            Positioned.fill(
-              child: _StimulusContent(
-                imageAssetPath: imageAssetPath,
-                bodyText: bodyText,
-                showBodyPanel: hasBodyText,
-                imageFlex: hasImage && hasBodyText ? 3 : 1,
-                bodyFlex: hasImage && hasBodyText ? 2 : 1,
-              ),
-            ),
-            if (showNavigation && hasImage) ...[
-              Positioned(
-                left: 5,
-                child: _ImageNavigationButton(
-                  icon: Icons.chevron_left,
-                  onTap: onPrevious,
+      child: GestureDetector(
+        onHorizontalDragEnd: showNavigation && hasImage
+            ? (details) {
+                final velocity = details.primaryVelocity ?? 0;
+                if (velocity < -120) {
+                  onNext?.call();
+                } else if (velocity > 120) {
+                  onPrevious?.call();
+                }
+              }
+            : null,
+        child: ColoredBox(
+          color: Colors.white,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              Positioned.fill(
+                child: _StimulusContent(
+                  imageAssetPath: imageAssetPath,
+                  bodyText: bodyText,
+                  showBodyPanel: hasBodyText,
+                  imageFlex: hasImage && hasBodyText ? 3 : 1,
+                  bodyFlex: hasImage && hasBodyText ? 2 : 1,
                 ),
               ),
-              Positioned(
-                right: 5,
-                child: _ImageNavigationButton(
-                  icon: Icons.chevron_right,
-                  onTap: onNext,
+              if (showNavigation && hasImage) ...[
+                Positioned(
+                  left: 5,
+                  child: _ImageNavigationButton(
+                    icon: Icons.chevron_left,
+                    onTap: onPrevious,
+                  ),
                 ),
-              ),
+                Positioned(
+                  right: 5,
+                  child: _ImageNavigationButton(
+                    icon: Icons.chevron_right,
+                    onTap: onNext,
+                  ),
+                ),
+                Positioned(
+                  bottom: 8,
+                  child: _ImagePageDots(
+                    currentIndex: currentImageIndex,
+                    imageCount: imageCount,
+                  ),
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );
@@ -173,6 +196,46 @@ class _ImageNavigationButton extends StatelessWidget {
       constraints: const BoxConstraints.tightFor(width: 32, height: 32),
       icon: Icon(icon, color: Colors.black, size: 32),
       splashRadius: 20,
+    );
+  }
+}
+
+class _ImagePageDots extends StatelessWidget {
+  const _ImagePageDots({required this.currentIndex, required this.imageCount});
+
+  final int currentIndex;
+  final int imageCount;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: const Color(0x99000000),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 5),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (var index = 0; index < imageCount; index++) ...[
+              AnimatedContainer(
+                key: ValueKey('quiz-image-page-dot-$index'),
+                duration: const Duration(milliseconds: 160),
+                width: index == currentIndex ? 14 : 6,
+                height: 6,
+                decoration: BoxDecoration(
+                  color: index == currentIndex
+                      ? Colors.white
+                      : const Color(0x99FFFFFF),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+              ),
+              if (index != imageCount - 1) const SizedBox(width: 5),
+            ],
+          ],
+        ),
+      ),
     );
   }
 }

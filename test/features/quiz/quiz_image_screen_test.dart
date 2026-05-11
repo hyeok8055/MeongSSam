@@ -7,6 +7,7 @@ import 'package:meongssam/features/quiz/domain/quiz_question.dart';
 import 'package:meongssam/features/quiz/domain/quiz_session_store.dart';
 import 'package:meongssam/features/quiz/presentation/view/quiz_image_screen.dart';
 import 'package:meongssam/features/quiz/presentation/widgets/quiz_choice_card.dart';
+import 'package:meongssam/features/quiz/presentation/widgets/quiz_image_choice_grid.dart';
 import 'package:meongssam/features/quiz/presentation/widgets/quiz_image_placeholder.dart';
 import 'package:meongssam/features/quiz/presentation/widgets/quiz_next_button.dart';
 
@@ -98,6 +99,73 @@ void main() {
     expect(find.byType(QuizImageScreen), findsNothing);
   });
 
+  testWidgets('multiple question images can be swiped and show page dots', (
+    tester,
+  ) async {
+    await pumpQuizImageScreen(
+      tester,
+      questions: [
+        _questions(1).single.copyWithImages([
+          'assets/question_media/first.webp',
+          'assets/question_media/second.webp',
+        ]),
+      ],
+    );
+
+    expect(
+      tester
+          .widget<QuizImagePlaceholder>(find.byType(QuizImagePlaceholder))
+          .currentImageIndex,
+      0,
+    );
+    expect(find.byKey(const ValueKey('quiz-image-page-dot-0')), findsOneWidget);
+    expect(find.byKey(const ValueKey('quiz-image-page-dot-1')), findsOneWidget);
+
+    await tester.fling(
+      find.byType(QuizImagePlaceholder),
+      const Offset(-260, 0),
+      900,
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      tester
+          .widget<QuizImagePlaceholder>(find.byType(QuizImagePlaceholder))
+          .currentImageIndex,
+      1,
+    );
+  });
+
+  testWidgets(
+    'image-choice questions use a selectable grid and long press modal',
+    (tester) async {
+      await pumpQuizImageScreen(tester, questions: [_imageChoiceQuestion()]);
+
+      expect(find.byType(QuizImagePlaceholder), findsNothing);
+      expect(find.byType(QuizImageChoiceGrid), findsOneWidget);
+      expect(find.byKey(const ValueKey('quiz-image-choice-1')), findsOneWidget);
+      expect(
+        tester.widget<QuizNextButton>(find.byType(QuizNextButton)).enabled,
+        isFalse,
+      );
+
+      await tester.longPress(find.byKey(const ValueKey('quiz-image-choice-1')));
+      await tester.pumpAndSettle();
+      expect(find.text('1번'), findsOneWidget);
+
+      await tester.tap(find.byTooltip('닫기'));
+      await tester.pumpAndSettle();
+      expect(find.text('1번'), findsNothing);
+
+      await tester.tap(find.byKey(const ValueKey('quiz-image-choice-4')));
+      await tester.pump();
+      expect(
+        tester.widget<QuizNextButton>(find.byType(QuizNextButton)).enabled,
+        isTrue,
+      );
+    },
+  );
+
   testWidgets(
     'last question shows set result after answering and tapping next',
     (tester) async {
@@ -116,6 +184,32 @@ void main() {
       expect(find.text('한 세트를 모두 풀이했어요!'), findsOneWidget);
       expect(find.text('2 문제 중 1문제 맞았어요'), findsOneWidget);
     },
+  );
+}
+
+extension _QuizQuestionTestCopy on QuizQuestion {
+  QuizQuestion copyWithImages(List<String> imageAssetPaths) {
+    return QuizQuestion(
+      id: id,
+      number: number,
+      prompt: prompt,
+      bodyText: bodyText,
+      choices: choices,
+      correctChoiceIndex: correctChoiceIndex,
+      imageAssetPaths: imageAssetPaths,
+    );
+  }
+}
+
+QuizQuestion _imageChoiceQuestion() {
+  return const QuizQuestion(
+    id: 'q326',
+    number: 326,
+    prompt: '326. image choice',
+    bodyText: 'body text',
+    choices: [],
+    correctChoiceIndex: 3,
+    imageAssetPaths: ['assets/question_media/composite.webp'],
   );
 }
 

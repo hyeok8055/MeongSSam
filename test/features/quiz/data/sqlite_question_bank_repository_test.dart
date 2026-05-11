@@ -35,6 +35,16 @@ void main() {
     expect(databaseService.loadedAllQuestions, isTrue);
     expect(questions.map((question) => question.number), [1, 2]);
   });
+
+  test('uses numeric answer labels for image-choice questions', () async {
+    final databaseService = _ImageChoiceQuestionDatabaseService();
+    final repository = SqliteQuestionBankRepository(databaseService);
+
+    final questions = await repository.loadRandomQuestionSet(limit: 1);
+
+    expect(questions.single.choices, isEmpty);
+    expect(questions.single.correctChoiceIndex, 3);
+  });
 }
 
 class _FakeQuestionBankDatabaseService extends QuestionBankDatabaseService {
@@ -112,6 +122,57 @@ class _FakeQuestionBankDatabaseService extends QuestionBankDatabaseService {
       {
         'question_id': 'q2',
         'asset_path': 'assets/question_media/shared.webp',
+        'position': 1,
+      },
+    ];
+  }
+}
+
+class _ImageChoiceQuestionDatabaseService extends QuestionBankDatabaseService {
+  @override
+  Future<List<Map<String, Object?>>> queryQuestionRows({
+    required String setId,
+  }) async {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<List<Map<String, Object?>>> queryRandomQuestionRows({
+    required int limit,
+  }) async {
+    return const [
+      {
+        'id': 'q326',
+        'question_number': 326,
+        'prompt': 'Question 326',
+        'body_text': 'Body',
+        'answer_label': '4',
+      },
+    ];
+  }
+
+  @override
+  Future<List<Map<String, Object?>>> queryQuestionRowsByIds(
+    List<String> questionIds,
+  ) async {
+    return queryRandomQuestionRows(limit: questionIds.length);
+  }
+
+  @override
+  Future<List<Map<String, Object?>>> queryChoiceRows(
+    List<String> questionIds,
+  ) async {
+    return const [];
+  }
+
+  @override
+  Future<List<Map<String, Object?>>> queryImageRows(
+    List<String> questionIds,
+  ) async {
+    return const [
+      {
+        'question_id': 'q326',
+        'asset_path': 'assets/question_media/img_0047.webp',
         'position': 1,
       },
     ];
