@@ -37,6 +37,8 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
   flutter_svg: ^2.2.4
+  sqflite: ^2.4.2+1
+  path: ^1.9.1
 
 dev_dependencies:
   flutter_test:
@@ -62,6 +64,8 @@ flutter:
   assets:
     - assets/icons/
     - assets/images/
+    - assets/question_bank/
+    - assets/question_media/
   fonts:
     - family: Pretendard
       fonts:
