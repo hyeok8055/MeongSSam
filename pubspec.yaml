@@ -58,8 +58,8 @@ flutter_launcher_icons:
   image_path: "tool/launcher_icons/boricon_1024.png"
   min_sdk_android: 21
   remove_alpha_ios: true
-  background_color_ios: "#FFF4E5"
-  adaptive_icon_background: "#FFF4E5"
+  background_color_ios: "#163A70"
+  adaptive_icon_background: "#163A70"
   adaptive_icon_foreground: "tool/launcher_icons/boricon_foreground.png"
   adaptive_icon_monochrome: "tool/launcher_icons/boricon_foreground.png"
   web:

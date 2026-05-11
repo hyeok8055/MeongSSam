@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 abstract interface class LocalStore {
   Future<void> setString(String key, String value);
   String? getString(String key);
+  Future<void> remove(String key);
 }
 
 class SharedPreferencesLocalStore implements LocalStore {
@@ -18,5 +19,10 @@ class SharedPreferencesLocalStore implements LocalStore {
   @override
   Future<void> setString(String key, String value) async {
     await _sharedPreferences.setString(key, value);
+  }
+
+  @override
+  Future<void> remove(String key) async {
+    await _sharedPreferences.remove(key);
   }
 }

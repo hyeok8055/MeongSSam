@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:meongssam/app/di/app_providers.dart';
 import 'package:meongssam/core/assets/app_assets.dart';
 import 'package:meongssam/features/home/application/home_view_model.dart';
 import 'package:meongssam/features/home/presentation/widgets/level_card.dart';
 import 'package:meongssam/features/home/presentation/widgets/main_warning_dialog.dart';
 import 'package:meongssam/features/home/presentation/widgets/quick_action_card.dart';
+import 'package:meongssam/features/quiz/application/quiz_view_model.dart';
 import 'package:meongssam/features/quiz/presentation/view/quiz_image_screen.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -30,9 +32,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     setState(() => _isWarningVisible = false);
   }
 
-  void _openQuiz() {
+  Future<void> _openQuiz() async {
+    final launchMode = ref.read(quizSessionStoreProvider).hasSession()
+        ? await _showQuizResumeChoice()
+        : QuizLaunchMode.fresh;
+    if (!mounted || launchMode == null) return;
     Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (context) => const QuizImageScreen()),
+      MaterialPageRoute<void>(
+        builder: (context) => QuizImageScreen(launchMode: launchMode),
+      ),
+    );
+  }
+
+  Future<QuizLaunchMode?> _showQuizResumeChoice() {
+    return showDialog<QuizLaunchMode>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const _QuizResumeDialog(),
     );
   }
 
@@ -158,6 +174,45 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _QuizResumeDialog extends StatelessWidget {
+  const _QuizResumeDialog();
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      backgroundColor: const Color(0xFFF9FAFB),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      title: const Text(
+        '풀던 문제가 있어요',
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          color: Colors.black,
+          fontFamily: 'Pretendard',
+          fontSize: 20,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      actionsAlignment: MainAxisAlignment.center,
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(QuizLaunchMode.resume),
+          child: const Text('이어서 풀기'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.of(context).pop(QuizLaunchMode.fresh),
+          style: FilledButton.styleFrom(
+            backgroundColor: const Color(0xFF002366),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(6),
+            ),
+          ),
+          child: const Text('새 문제 풀기'),
+        ),
+      ],
     );
   }
 }
