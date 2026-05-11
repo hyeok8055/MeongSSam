@@ -48,6 +48,18 @@ void main() {
     expect(find.text('1/20'), findsOneWidget);
   });
 
+  testWidgets('temporary audit action opens all-question audit screen', (
+    tester,
+  ) async {
+    await pumpHomeScreen(tester, questionCount: 800);
+
+    await tester.tap(find.text('전수 검수'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('검수 1 / 800'), findsOneWidget);
+    expect(find.text('Question 1'), findsOneWidget);
+  });
+
   testWidgets('unimplemented main actions show the warning popup', (
     tester,
   ) async {
@@ -81,6 +93,7 @@ void main() {
 Future<void> pumpHomeScreen(
   WidgetTester tester, {
   bool hasSavedQuizSession = false,
+  int questionCount = 20,
 }) async {
   tester.view.physicalSize = const Size(480, 1040);
   tester.view.devicePixelRatio = 1;
@@ -91,7 +104,7 @@ Future<void> pumpHomeScreen(
     ProviderScope(
       overrides: [
         questionBankRepositoryProvider.overrideWithValue(
-          _FakeQuestionBankRepository(_questions(20)),
+          _FakeQuestionBankRepository(_questions(questionCount)),
         ),
         quizSessionStoreProvider.overrideWithValue(
           _FakeQuizSessionStore(hasSavedSession: hasSavedQuizSession),
@@ -140,6 +153,11 @@ class _FakeQuestionBankRepository implements QuestionBankRepository {
       for (final id in ids)
         if (questionsById[id] != null) questionsById[id]!,
     ];
+  }
+
+  @override
+  Future<List<QuizQuestion>> loadAllQuestions() async {
+    return _questions;
   }
 }
 

@@ -8,6 +8,7 @@ import 'package:meongssam/features/home/presentation/widgets/level_card.dart';
 import 'package:meongssam/features/home/presentation/widgets/main_warning_dialog.dart';
 import 'package:meongssam/features/home/presentation/widgets/quick_action_card.dart';
 import 'package:meongssam/features/quiz/application/quiz_view_model.dart';
+import 'package:meongssam/features/quiz/presentation/view/question_audit_screen.dart';
 import 'package:meongssam/features/quiz/presentation/view/quiz_image_screen.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -49,6 +50,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       context: context,
       barrierDismissible: false,
       builder: (context) => const _QuizResumeDialog(),
+    );
+  }
+
+  void _openQuestionAudit() {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (context) => const QuestionAuditScreen(),
+      ),
     );
   }
 
@@ -141,6 +150,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                             SizedBox(width: 23 * scale),
                                         ],
                                       ],
+                                    ),
+                                    SizedBox(height: 18 * scale),
+                                    SizedBox(
+                                      width: double.infinity,
+                                      child: OutlinedButton.icon(
+                                        onPressed: _openQuestionAudit,
+                                        icon: const Icon(Icons.fact_check),
+                                        label: const Text('전수 검수'),
+                                      ),
                                     ),
                                   ],
                                 ),

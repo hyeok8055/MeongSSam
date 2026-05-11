@@ -64,6 +64,14 @@ class QuestionBankDatabaseService {
     );
   }
 
+  Future<List<Map<String, Object?>>> queryAllQuestionRows() async {
+    return _queryWithSchemaRefresh('''
+      SELECT id, question_number, prompt, body_text, answer_label
+      FROM questions
+      ORDER BY question_number
+      ''', const []);
+  }
+
   Future<List<Map<String, Object?>>> queryQuestionRowsByIds(
     List<String> questionIds,
   ) async {

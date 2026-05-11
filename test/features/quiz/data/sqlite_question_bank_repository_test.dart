@@ -25,6 +25,16 @@ void main() {
       ]);
     },
   );
+
+  test('loads all questions in database order', () async {
+    final databaseService = _FakeQuestionBankDatabaseService();
+    final repository = SqliteQuestionBankRepository(databaseService);
+
+    final questions = await repository.loadAllQuestions();
+
+    expect(databaseService.loadedAllQuestions, isTrue);
+    expect(questions.map((question) => question.number), [1, 2]);
+  });
 }
 
 class _FakeQuestionBankDatabaseService extends QuestionBankDatabaseService {
@@ -36,6 +46,13 @@ class _FakeQuestionBankDatabaseService extends QuestionBankDatabaseService {
   }
 
   int? lastLimit;
+  bool loadedAllQuestions = false;
+
+  @override
+  Future<List<Map<String, Object?>>> queryAllQuestionRows() async {
+    loadedAllQuestions = true;
+    return queryRandomQuestionRows(limit: 800);
+  }
 
   @override
   Future<List<Map<String, Object?>>> queryRandomQuestionRows({

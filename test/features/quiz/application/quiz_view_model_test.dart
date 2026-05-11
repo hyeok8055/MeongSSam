@@ -102,6 +102,11 @@ class _FakeQuestionBankRepository implements QuestionBankRepository {
         if (questionsById[id] != null) questionsById[id]!,
     ];
   }
+
+  @override
+  Future<List<QuizQuestion>> loadAllQuestions() async {
+    return _questions;
+  }
 }
 
 class _FakeQuizSessionStore implements QuizSessionStore {

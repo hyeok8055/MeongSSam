@@ -28,6 +28,12 @@ class SqliteQuestionBankRepository implements QuestionBankRepository {
     ];
   }
 
+  @override
+  Future<List<QuizQuestion>> loadAllQuestions() async {
+    final questionRows = await _databaseService.queryAllQuestionRows();
+    return _questionsFromRows(questionRows);
+  }
+
   Future<List<QuizQuestion>> _questionsFromRows(
     List<Map<String, Object?>> questionRows,
   ) async {
