@@ -166,6 +166,26 @@ void main() {
     },
   );
 
+  testWidgets('database image-choice questions use choice image refs', (
+    tester,
+  ) async {
+    await pumpQuizImageScreen(tester, questions: [_dbImageChoiceQuestion()]);
+
+    expect(find.byType(QuizImagePlaceholder), findsOneWidget);
+    expect(find.byType(QuizImageChoiceGrid), findsOneWidget);
+    expect(find.byType(QuizChoiceCard), findsNothing);
+    expect(find.byKey(const ValueKey('quiz-image-choice-2')), findsOneWidget);
+    expect(find.text('stimulus body'), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('quiz-image-choice-2')));
+    await tester.pump();
+
+    expect(
+      tester.widget<QuizNextButton>(find.byType(QuizNextButton)).enabled,
+      isTrue,
+    );
+  });
+
   testWidgets(
     'last question shows set result after answering and tapping next',
     (tester) async {
@@ -210,6 +230,39 @@ QuizQuestion _imageChoiceQuestion() {
     choices: [],
     correctChoiceIndex: 3,
     imageAssetPaths: ['assets/question_media/composite.webp'],
+  );
+}
+
+QuizQuestion _dbImageChoiceQuestion() {
+  return const QuizQuestion(
+    id: 'q461',
+    number: 461,
+    prompt: '461. image choices from db',
+    bodyText: 'stimulus body',
+    choices: [
+      QuizChoice(
+        label: '1',
+        text: '',
+        imageAssetPath: 'assets/question_media/img_0103.png',
+      ),
+      QuizChoice(
+        label: '2',
+        text: '',
+        imageAssetPath: 'assets/question_media/img_0104.png',
+      ),
+      QuizChoice(
+        label: '3',
+        text: '',
+        imageAssetPath: 'assets/question_media/img_0105.png',
+      ),
+      QuizChoice(
+        label: '4',
+        text: '',
+        imageAssetPath: 'assets/question_media/img_0106.png',
+      ),
+    ],
+    correctChoiceIndex: 1,
+    imageAssetPaths: ['assets/question_media/img_0102.png'],
   );
 }
 

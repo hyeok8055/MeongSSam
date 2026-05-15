@@ -95,6 +95,34 @@ class _QuizImageScreenState extends ConsumerState<QuizImageScreen> {
         : question.imageAssetPaths[_imageIndex
               .clamp(0, imageCount - 1)
               .toInt()];
+    final imageChoices = question.choices
+        .where((choice) => choice.hasImage)
+        .toList(growable: false);
+    final usesDbImageChoiceGrid =
+        imageChoices.isNotEmpty &&
+        imageChoices.length == question.choices.length;
+    final usesLegacyImageChoiceGrid =
+        question.number >= 326 &&
+        question.number <= 331 &&
+        question.imageAssetPaths.isNotEmpty &&
+        question.choices.isEmpty;
+    final usesImageChoiceGrid =
+        usesDbImageChoiceGrid || usesLegacyImageChoiceGrid;
+    final rawImageChoiceAssetPaths = usesDbImageChoiceGrid
+        ? imageChoices
+              .map((choice) => choice.imageAssetPath)
+              .toList(growable: false)
+        : question.imageAssetPaths;
+    final imageChoiceAssetPaths =
+        rawImageChoiceAssetPaths.isNotEmpty &&
+            rawImageChoiceAssetPaths.every(
+              (assetPath) => assetPath == rawImageChoiceAssetPaths.first,
+            )
+        ? <String>[rawImageChoiceAssetPaths.first]
+        : rawImageChoiceAssetPaths;
+    final imageChoiceLabels = usesDbImageChoiceGrid
+        ? imageChoices.map((choice) => choice.label).toList(growable: false)
+        : const <String>[];
 
     return PopScope(
       canPop: false,
@@ -121,11 +149,6 @@ class _QuizImageScreenState extends ConsumerState<QuizImageScreen> {
                     final stimulusHeight = (metrics.minHeight * 0.31)
                         .clamp(220 * scale, 294 * scale)
                         .toDouble();
-                    final usesImageChoiceGrid =
-                        question.number >= 326 &&
-                        question.number <= 331 &&
-                        question.imageAssetPaths.isNotEmpty &&
-                        question.choices.isEmpty;
 
                     return Column(
                       children: [
@@ -150,13 +173,34 @@ class _QuizImageScreenState extends ConsumerState<QuizImageScreen> {
                         ),
                         SizedBox(height: 24 * scale),
                         if (usesImageChoiceGrid) ...[
-                          SizedBox(
-                            width: metrics.contentWidth,
-                            child: _QuestionBodyPanel(
-                              text: question.bodyText,
-                              scale: scale,
+                          if (usesDbImageChoiceGrid &&
+                              question.imageAssetPaths.isNotEmpty) ...[
+                            SizedBox(
+                              width: metrics.viewportWidth,
+                              height: stimulusHeight,
+                              child: ClipRect(
+                                child: QuizImagePlaceholder(
+                                  height: stimulusHeight,
+                                  imageAssetPath: imageAssetPath,
+                                  bodyText: question.bodyText,
+                                  showNavigation: question.hasImageNavigation,
+                                  currentImageIndex: _imageIndex,
+                                  imageCount: imageCount,
+                                  onPrevious: () =>
+                                      _showPreviousImage(imageCount),
+                                  onNext: () => _showNextImage(imageCount),
+                                ),
+                              ),
                             ),
-                          ),
+                          ] else if (question.hasBodyText) ...[
+                            SizedBox(
+                              width: metrics.contentWidth,
+                              child: _QuestionBodyPanel(
+                                text: question.bodyText,
+                                scale: scale,
+                              ),
+                            ),
+                          ],
                         ] else ...[
                           SizedBox(
                             width: metrics.viewportWidth,
@@ -188,7 +232,8 @@ class _QuizImageScreenState extends ConsumerState<QuizImageScreen> {
                                   child: usesImageChoiceGrid
                                       ? QuizImageChoiceGrid(
                                           imageAssetPaths:
-                                              question.imageAssetPaths,
+                                              imageChoiceAssetPaths,
+                                          labels: imageChoiceLabels,
                                           selectedIndex:
                                               state.selectedChoiceIndex,
                                           correctChoiceIndex:

@@ -42,7 +42,13 @@ void main() {
 
     final questions = await repository.loadRandomQuestionSet(limit: 1);
 
-    expect(questions.single.choices, isEmpty);
+    expect(questions.single.choices, hasLength(4));
+    expect(questions.single.choices.map((choice) => choice.imageAssetPath), [
+      'assets/question_media/img_0047.png',
+      'assets/question_media/img_0047.png',
+      'assets/question_media/img_0047.png',
+      'assets/question_media/img_0047.png',
+    ]);
     expect(questions.single.correctChoiceIndex, 3);
   });
 }
@@ -162,19 +168,42 @@ class _ImageChoiceQuestionDatabaseService extends QuestionBankDatabaseService {
   Future<List<Map<String, Object?>>> queryChoiceRows(
     List<String> questionIds,
   ) async {
-    return const [];
+    return const [
+      {
+        'question_id': 'q326',
+        'label': '1',
+        'text': '',
+        'position': 1,
+        'image_ref': 'assets/question_media/img_0047.png',
+      },
+      {
+        'question_id': 'q326',
+        'label': '2',
+        'text': '',
+        'position': 2,
+        'image_ref': 'assets/question_media/img_0047.png',
+      },
+      {
+        'question_id': 'q326',
+        'label': '3',
+        'text': '',
+        'position': 3,
+        'image_ref': 'assets/question_media/img_0047.png',
+      },
+      {
+        'question_id': 'q326',
+        'label': '4',
+        'text': '',
+        'position': 4,
+        'image_ref': 'assets/question_media/img_0047.png',
+      },
+    ];
   }
 
   @override
   Future<List<Map<String, Object?>>> queryImageRows(
     List<String> questionIds,
   ) async {
-    return const [
-      {
-        'question_id': 'q326',
-        'asset_path': 'assets/question_media/img_0047.webp',
-        'position': 1,
-      },
-    ];
+    return const [];
   }
 }

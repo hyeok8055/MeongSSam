@@ -8,16 +8,21 @@ class QuizImageChoiceGrid extends StatelessWidget {
     required this.correctChoiceIndex,
     required this.scale,
     required this.onSelect,
+    this.labels = const [],
   });
 
   final List<String> imageAssetPaths;
+  final List<String> labels;
   final int? selectedIndex;
   final int correctChoiceIndex;
   final double scale;
   final ValueChanged<int>? onSelect;
 
-  int get _itemCount =>
-      imageAssetPaths.length == 1 ? 4 : imageAssetPaths.length;
+  int get _itemCount => labels.isNotEmpty
+      ? labels.length
+      : imageAssetPaths.length == 1
+      ? 4
+      : imageAssetPaths.length;
 
   @override
   Widget build(BuildContext context) {
@@ -37,11 +42,9 @@ class QuizImageChoiceGrid extends StatelessWidget {
       ),
       itemBuilder: (context, index) {
         return _ImageChoiceTile(
-          label: '${index + 1}',
-          assetPath: imageAssetPaths.length == 1
-              ? imageAssetPaths.first
-              : imageAssetPaths[index],
-          compositeIndex: imageAssetPaths.length == 1 ? index : null,
+          label: _labelFor(index),
+          assetPath: _assetPathFor(index),
+          compositeIndex: _compositeIndexFor(index),
           scale: scale,
           state: _stateFor(index),
           onTap: selectedIndex == null ? () => onSelect?.call(index) : null,
@@ -60,20 +63,32 @@ class QuizImageChoiceGrid extends StatelessWidget {
   }
 
   Future<void> _showExpandedImage(BuildContext context, int index) {
-    final assetPath = imageAssetPaths.length == 1
-        ? imageAssetPaths.first
-        : imageAssetPaths[index];
-    final compositeIndex = imageAssetPaths.length == 1 ? index : null;
+    final assetPath = _assetPathFor(index);
+    final compositeIndex = _compositeIndexFor(index);
 
     return showDialog<void>(
       context: context,
       barrierDismissible: true,
       builder: (context) => _ExpandedImageDialog(
-        label: '${index + 1}',
+        label: _labelFor(index),
         assetPath: assetPath,
         compositeIndex: compositeIndex,
       ),
     );
+  }
+
+  String _labelFor(int index) {
+    if (labels.isEmpty) return '${index + 1}';
+    return labels[index];
+  }
+
+  String _assetPathFor(int index) {
+    if (imageAssetPaths.length == 1) return imageAssetPaths.first;
+    return imageAssetPaths[index];
+  }
+
+  int? _compositeIndexFor(int index) {
+    return imageAssetPaths.length == 1 && _itemCount == 4 ? index : null;
   }
 }
 

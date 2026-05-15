@@ -23,10 +23,16 @@ class QuizQuestion {
 }
 
 class QuizChoice {
-  const QuizChoice({required this.label, required this.text});
+  const QuizChoice({
+    required this.label,
+    required this.text,
+    this.imageAssetPath = '',
+  });
 
   final String label;
   final String text;
+  final String imageAssetPath;
 
+  bool get hasImage => imageAssetPath.trim().isNotEmpty;
   String get displayText => text.isEmpty ? label : '$label. $text';
 }

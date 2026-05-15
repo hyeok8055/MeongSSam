@@ -92,6 +92,7 @@ class SqliteQuestionBankRepository implements QuestionBankRepository {
         QuizChoice(
           label: row['label']! as String,
           text: row['text']! as String,
+          imageAssetPath: row['image_ref'] as String? ?? '',
         ),
       );
     }

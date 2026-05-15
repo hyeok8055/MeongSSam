@@ -91,8 +91,11 @@ class QuestionBankDatabaseService {
     if (questionIds.isEmpty) return const [];
     final database = await open();
     final placeholders = List.filled(questionIds.length, '?').join(',');
+    final imageRefSelect = await _hasColumn(database, 'choices', 'image_ref')
+        ? 'image_ref'
+        : "'' AS image_ref";
     return database.rawQuery('''
-      SELECT question_id, label, text, position
+      SELECT question_id, label, text, position, $imageRefSelect
       FROM choices
       WHERE question_id IN ($placeholders)
       ORDER BY question_id, position
@@ -134,8 +137,16 @@ class QuestionBankDatabaseService {
   }
 
   Future<bool> _hasRequiredSchema(Database database) async {
-    final columns = await database.rawQuery('PRAGMA table_info(questions)');
-    return columns.any((column) => column['name'] == 'body_text');
+    return _hasColumn(database, 'questions', 'body_text');
+  }
+
+  Future<bool> _hasColumn(
+    Database database,
+    String table,
+    String columnName,
+  ) async {
+    final columns = await database.rawQuery('PRAGMA table_info($table)');
+    return columns.any((column) => column['name'] == columnName);
   }
 
   Future<void> _copyBundledAsset(String databasePath) async {
